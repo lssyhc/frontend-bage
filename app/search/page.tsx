@@ -21,11 +21,24 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 import { useIntersectionObserver } from '@/hooks/useIntersectionObserver';
 import api from '@/lib/axios';
+import type { LocationDetail, Post, User } from '@/types';
+
+interface SearchUser extends User {
+  bio?: string | null;
+}
+
+type SearchResult = Post | LocationDetail | SearchUser;
 
 const searchCache: Record<
   string,
-  { results: any[]; page: number; hasMore: boolean }
+  { results: SearchResult[]; page: number; hasMore: boolean }
 > = {};
+
+const isSearchUser = (item: SearchResult): item is SearchUser =>
+  'username' in item && 'is_followed' in item;
+
+const isLocationDetail = (item: SearchResult): item is LocationDetail =>
+  'address' in item && 'category' in item && 'coordinates' in item;
 
 export default function SearchPage() {
   const searchParams = useSearchParams();
@@ -36,7 +49,7 @@ export default function SearchPage() {
   const [query, setQuery] = useState(initialQuery);
   const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
 
-  const [results, setResults] = useState<any[]>([]);
+  const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
@@ -157,7 +170,7 @@ export default function SearchPage() {
         res = await api.get(`/locations?search=${encodedQ}${pageParam}`);
       }
 
-      let newData: any[] = [];
+      let newData: SearchResult[] = [];
       let meta: { current_page: number; last_page: number } | null = null;
 
       if (res && res.data) {
@@ -167,14 +180,14 @@ export default function SearchPage() {
 
       setResults((prev) => {
         const uniqueIncomingData = Array.from(
-          new Map(newData.map((item: any) => [item.id, item])).values()
+          new Map(newData.map((item) => [item.id, item])).values()
         );
 
-        let updatedResults: any[];
+        let updatedResults: SearchResult[];
         if (isLoadMore) {
-          const existingIds = new Set(prev.map((item: any) => item.id));
+          const existingIds = new Set(prev.map((item) => item.id));
           const uniqueNew = uniqueIncomingData.filter(
-            (item: any) => !existingIds.has(item.id)
+            (item) => !existingIds.has(item.id)
           );
           updatedResults = [...prev, ...uniqueNew];
         } else {
@@ -214,7 +227,7 @@ export default function SearchPage() {
 
   const handleFollow = async (
     e: React.MouseEvent<HTMLButtonElement>,
-    targetUser: any
+    targetUser: SearchUser
   ) => {
     e.preventDefault();
     e.stopPropagation();
@@ -224,7 +237,9 @@ export default function SearchPage() {
 
     setResults((prev) =>
       prev.map((item) =>
-        item.id === targetUser.id ? { ...item, is_followed: !isFollowing } : item
+        isSearchUser(item) && item.id === targetUser.id
+          ? { ...item, is_followed: !isFollowing }
+          : item
       )
     );
 
@@ -319,8 +334,8 @@ export default function SearchPage() {
                   </span>
                 ) : (
                   <div className="divide-border divide-y divide-solid">
-                    {results.map((item: any) => {
-                      if (f === 'people') {
+                    {results.map((item) => {
+                      if (f === 'people' && isSearchUser(item)) {
                         return (
                           <AccountItem
                             key={item.id}
@@ -328,10 +343,10 @@ export default function SearchPage() {
                             onFollow={(e) => handleFollow(e, item)}
                           />
                         );
-                      } else if (f === 'places') {
+                      } else if (f === 'places' && isLocationDetail(item)) {
                         return <PlaceItem key={item.id} location={item} />;
                       } else {
-                        return <PostItem key={item.id} post={item} />;
+                        return <PostItem key={item.id} post={item as Post} />;
                       }
                     })}
 

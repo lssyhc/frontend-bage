@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useIsomorphicLayoutEffect } from '@/hooks/use-isomorphic-layout-effect';
 import { useMediaQuery } from '@/hooks/use-media-query';
-import api from '@/lib/axios';
+import api, { getApiErrorMessage } from '@/lib/axios';
 
 interface PlaceActionProps {
   locationId: number;
@@ -66,10 +66,11 @@ export default function PlaceAction({
       await api.delete(`/locations/${locationId}`);
       toast.success('Tempat berhasil dihapus!');
       router.back();
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message ||
-        'Terjadi kesalahan. Silakan coba lagi nanti.';
+    } catch (error: unknown) {
+      const message = getApiErrorMessage(
+        error,
+        'Terjadi kesalahan. Silakan coba lagi nanti.'
+      );
       toast.error('Gagal menghapus tempat', {
         description: message,
       });

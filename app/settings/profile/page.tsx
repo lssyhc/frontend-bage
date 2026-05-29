@@ -12,7 +12,7 @@ import { ArrowLeft, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
-import api from '@/lib/axios';
+import api, { getApiErrorMessage, getApiValidationErrors } from '@/lib/axios';
 import TopBar from '@/components/TopBar';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -185,7 +185,7 @@ export default function ProfileSettingsPage() {
           setServerInitials(user.username.charAt(0).toUpperCase());
         }
 
-      } catch (error) {
+      } catch {
         toast.error('Gagal memuat profil. Silakan coba lagi nanti.');
       }
     };
@@ -238,9 +238,10 @@ export default function ProfileSettingsPage() {
         setCroppedImage(null);
       }
 
-    } catch (error: any) {
-      if (error.response?.data?.errors) {
-        const apiErrors = error.response.data.errors;
+    } catch (error: unknown) {
+      const apiErrors = getApiValidationErrors(error);
+
+      if (apiErrors) {
         if (apiErrors.username) {
           toast.error(apiErrors.username[0]);
         }
@@ -248,7 +249,12 @@ export default function ProfileSettingsPage() {
           toast.error(apiErrors.profile_picture[0]);
         }
       } else {
-        toast.error(error.response?.data?.message || 'Gagal memperbarui profil. Silakan coba lagi nanti.');
+        toast.error(
+          getApiErrorMessage(
+            error,
+            'Gagal memperbarui profil. Silakan coba lagi nanti.'
+          )
+        );
       }
     }
   };

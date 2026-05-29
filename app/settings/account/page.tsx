@@ -10,7 +10,7 @@ import { ArrowLeft } from 'lucide-react';
 import { toast } from 'sonner';
 import * as z from 'zod';
 
-import api from '@/lib/axios';
+import api, { getApiValidationErrors } from '@/lib/axios';
 import TopBar from '@/components/TopBar';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -42,6 +42,12 @@ const accountSchema = z
 
 type AccountFormValues = z.infer<typeof accountSchema>;
 
+interface AccountUpdatePayload {
+  email: string;
+  password?: string;
+  password_confirmation?: string;
+}
+
 export default function AccountSettingsPage() {
   const router = useRouter();
   const [responseError, setResponseError] = useState<string | null>(null);
@@ -71,7 +77,7 @@ export default function AccountSettingsPage() {
           newPassword: '',
           confirmPassword: '',
         });
-      } catch (error) {
+      } catch {
         toast.error('Gagal memuat data pengguna');
       }
     };
@@ -81,7 +87,7 @@ export default function AccountSettingsPage() {
   const onSubmit = async (data: AccountFormValues) => {
     setResponseError(null);
     try {
-      const payload: any = {
+      const payload: AccountUpdatePayload = {
         email: data.email,
       };
 
@@ -99,9 +105,10 @@ export default function AccountSettingsPage() {
         newPassword: '',
         confirmPassword: '',
       });
-    } catch (error: any) {
-      if (error.response?.data?.errors) {
-        const apiErrors = error.response.data.errors;
+    } catch (error: unknown) {
+      const apiErrors = getApiValidationErrors(error);
+
+      if (apiErrors) {
         if (apiErrors.email) {
           setResponseError(apiErrors.email[0]);
         } else if (apiErrors.password) {
