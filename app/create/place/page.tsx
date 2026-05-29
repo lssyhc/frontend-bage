@@ -43,7 +43,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
-import api from '@/lib/axios';
+import api, { getApiErrorMessage } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 
 const MAX_NAME = 100;
@@ -105,7 +105,7 @@ export default function CreatePlacePage() {
           setMapCenter([lat, lng]);
           setPosition([lat, lng]);
         }
-      } catch (error) {
+      } catch {
       } finally {
         setLocationPermissionResolved(true);
       }
@@ -137,7 +137,6 @@ export default function CreatePlacePage() {
     };
 
     getLocationFromGPS();
-    getLocationFromGPS();
   }, []);
 
   useEffect(() => {
@@ -145,7 +144,7 @@ export default function CreatePlacePage() {
       try {
         const res = await api.get('/categories');
         setCategories(res.data.data);
-      } catch (error) {
+      } catch {
         toast.error('Gagal memuat kategori. Silakan coba lagi nanti.');
       }
     };
@@ -187,10 +186,11 @@ export default function CreatePlacePage() {
       });
 
       router.back();
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message ||
-        'Terjadi kesalahan. Silakan coba lagi nanti.';
+    } catch (error: unknown) {
+      const message = getApiErrorMessage(
+        error,
+        'Terjadi kesalahan. Silakan coba lagi nanti.'
+      );
       toast.error('Gagal membuat tempat', {
         description: message,
       });

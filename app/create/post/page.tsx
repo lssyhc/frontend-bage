@@ -55,13 +55,13 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Spinner } from '@/components/ui/spinner';
-import api from '@/lib/axios';
+import api, { getApiErrorMessage } from '@/lib/axios';
 import { cn } from '@/lib/utils';
 
 interface Place {
   id: number;
   name: string;
-  slug: string;
+  icon: string;
   category: string;
   address: string;
 }
@@ -70,12 +70,12 @@ const categoryIconMap: Record<
   string,
   React.FC<React.SVGProps<SVGSVGElement>>
 > = {
-  kafe: Coffee,
-  restoran: Utensils,
-  taman: Trees,
-  museum: Landmark,
+  coffee: Coffee,
+  utensils: Utensils,
+  tree: Trees,
+  landmark: Landmark,
   hotel: Hotel,
-  'wisata-alam': Mountain,
+  mountain: Mountain,
   ellipsis: Ellipsis,
 };
 
@@ -134,7 +134,7 @@ export default function CreatePostPage() {
 
           setUserLocation({ latitude: lat, longitude: lng });
         }
-      } catch (error) { }
+      } catch {}
     };
 
     const getLocationFromGPS = () => {
@@ -165,7 +165,11 @@ export default function CreatePostPage() {
   useEffect(() => {
     const fetchPlaces = async () => {
       try {
-        const params: any = {};
+        const params: {
+          search?: string;
+          latitude?: number;
+          longitude?: number;
+        } = {};
         if (searchQuery) params.search = searchQuery;
         if (userLocation) {
           params.latitude = userLocation.latitude;
@@ -174,7 +178,7 @@ export default function CreatePostPage() {
 
         const res = await api.get('/locations', { params });
         setPlaces(res.data.data);
-      } catch (error) {
+      } catch {
         toast.error('Gagal memuat daftar tempat. Silakan coba lagi nanti.');
       }
     };
@@ -237,10 +241,11 @@ export default function CreatePostPage() {
       setSelectedPlace(null);
       setFiles([]);
       router.back();
-    } catch (error: any) {
-      const message =
-        error.response?.data?.message ||
-        'Terjadi kesalahan. Silakan coba lagi nanti.';
+    } catch (error: unknown) {
+      const message = getApiErrorMessage(
+        error,
+        'Terjadi kesalahan. Silakan coba lagi nanti.'
+      );
       toast.error('Gagal membuat unggahan', {
         description: message,
       });
@@ -301,7 +306,7 @@ export default function CreatePostPage() {
                           <>
                             {(() => {
                               const IconComponent =
-                                categoryIconMap[selectedPlace.slug] || Ellipsis;
+                                categoryIconMap[selectedPlace.icon] || Ellipsis;
                               return <IconComponent className="size-4" />;
                             })()}
                             <span>{selectedPlace.name}</span>
@@ -344,7 +349,7 @@ export default function CreatePostPage() {
                               <div className="flex items-center gap-2">
                                 {(() => {
                                   const IconComponent =
-                                    categoryIconMap[place.slug] || Ellipsis;
+                                    categoryIconMap[place.icon] || Ellipsis;
                                   return (
                                     <IconComponent className="mt-0.5 size-4" />
                                   );

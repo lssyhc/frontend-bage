@@ -1,15 +1,13 @@
 'use client';
 
-import { use, useEffect, useRef, useState } from 'react';
+import { use, useCallback, useEffect, useRef, useState } from 'react';
 
 import Image from 'next/image';
-import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 import { ArrowLeft, SendHorizontalIcon } from 'lucide-react';
 import { toast } from 'sonner';
 
-import CommentAction from '@/components/CommentAction';
 import CommentItem from '@/components/CommentItem';
 import NavigationBar from '@/components/NavigationBar';
 import PostDetail from '@/components/PostDetail';
@@ -38,6 +36,7 @@ export default function PostPage({
   const [commentsLoading, setCommentsLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const loadedCommentPageRef = useRef(1);
 
   const [loading, setLoading] = useState(true);
   const [commentText, setCommentText] = useState('');
@@ -51,6 +50,13 @@ export default function PostPage({
 
     const focus = searchParams.get('focus');
     const commentId = searchParams.get('commentId');
+
+    if (
+      commentId &&
+      !comments.some((comment) => String(comment.id) === commentId)
+    ) {
+      return;
+    }
 
     if (focus === 'comment') {
       setTimeout(() => {
@@ -68,20 +74,41 @@ export default function PostPage({
         }
       }, 100);
     }
-  }, [loading, searchParams]);
+  }, [loading, searchParams, comments]);
 
-  const fetchComments = async (
+  const fetchComments = useCallback(async (
     currentPage: number,
     isLoadMore: boolean = false
   ) => {
     if (!isLoadMore) setCommentsLoading(true);
 
     try {
+      const commentId = !isLoadMore ? searchParams.get('commentId') : null;
       const response = await api.get(
         `/posts/${resolvedParams.id}/comments?page=${currentPage}`
       );
-      const newComments = response.data.data;
-      const meta = response.data.meta;
+      let newComments: Comment[] = response.data.data;
+      let meta: { current_page: number; last_page: number } | null =
+        response.data.meta;
+
+      while (
+        commentId &&
+        meta &&
+        meta.current_page < meta.last_page &&
+        !newComments.some((comment) => String(comment.id) === commentId)
+      ) {
+        const nextPage = meta.current_page + 1;
+        const nextResponse = await api.get(
+          `/posts/${resolvedParams.id}/comments?page=${nextPage}`
+        );
+        const nextComments: Comment[] = nextResponse.data.data;
+        const existingIds = new Set(newComments.map((comment) => comment.id));
+        newComments = [
+          ...newComments,
+          ...nextComments.filter((comment) => !existingIds.has(comment.id)),
+        ];
+        meta = nextResponse.data.meta;
+      }
 
       setComments((prev) => {
         if (isLoadMore) {
@@ -93,15 +120,19 @@ export default function PostPage({
         return newComments;
       });
 
+      loadedCommentPageRef.current = meta?.current_page ?? currentPage;
+      if (!isLoadMore && loadedCommentPageRef.current !== currentPage) {
+        setPage(loadedCommentPageRef.current);
+      }
       setHasMore(meta ? meta.current_page < meta.last_page : false);
-    } catch (error) {
+    } catch {
       toast.error('Gagal memuat komentar.');
     } finally {
       setCommentsLoading(false);
     }
-  };
+  }, [resolvedParams.id, searchParams]);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       const [postRes, userRes] = await Promise.all([
         api.get(`/posts/${resolvedParams.id}`),
@@ -109,19 +140,19 @@ export default function PostPage({
       ]);
       setPost(postRes.data.data);
       setCurrentUser(userRes.data.data);
-    } catch (error) {
+    } catch {
       toast.error('Gagal memuat unggahan. Silakan coba lagi nanti.');
       router.push('/feed');
     } finally {
       setLoading(false);
     }
-  };
+  }, [resolvedParams.id, router]);
 
   useEffect(() => {
-    if (page > 1) {
+    if (page > loadedCommentPageRef.current) {
       fetchComments(page, true);
     }
-  }, [page]);
+  }, [fetchComments, page]);
 
   useEffect(() => {
     if (isIntersecting && hasMore && !commentsLoading) {
@@ -132,7 +163,7 @@ export default function PostPage({
   useEffect(() => {
     fetchData();
     fetchComments(1, false);
-  }, [resolvedParams.id, router]);
+  }, [fetchComments, fetchData]);
 
   const MAX_COMMENT_LENGTH = 150;
 
@@ -145,10 +176,18 @@ export default function PostPage({
       const response = await api.post(`/posts/${resolvedParams.id}/comments`, {
         content: commentText,
       });
-      setComments([response.data.data, ...comments]);
+      setComments((prev) => [response.data.data, ...prev]);
+      setPost((prev) =>
+        prev
+          ? {
+              ...prev,
+              total_comments: prev.total_comments + 1,
+            }
+          : prev
+      );
       setCommentText('');
       toast.success('Komentar berhasil dikirim!');
-    } catch (error) {
+    } catch {
       toast.error('Gagal mengirim komentar. Silakan coba lagi nanti.');
     } finally {
       setSubmittingComment(false);
@@ -157,6 +196,14 @@ export default function PostPage({
 
   const handleDeleteComment = (commentId: number) => {
     setComments((prev) => prev.filter((c) => c.id !== commentId));
+    setPost((prev) =>
+      prev
+        ? {
+            ...prev,
+            total_comments: Math.max(prev.total_comments - 1, 0),
+          }
+        : prev
+    );
   };
 
   if (loading) {

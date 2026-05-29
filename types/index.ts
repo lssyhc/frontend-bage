@@ -15,7 +15,6 @@ export interface Location {
 export interface LocationDetail {
     id: number;
     name: string;
-    slug: string;
     icon: string;
     category: string;
     address: string;
@@ -77,6 +76,7 @@ export interface NotificationData {
     follower_id?: number;
     follower_username?: string;
     follower_profile_picture_url?: string | null;
+    is_followed?: boolean;
 }
 
 export interface Notification {

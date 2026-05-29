@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -69,6 +69,18 @@ export default function PostAction({
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
 
+  useEffect(() => {
+    setLiked(initialIsLiked);
+  }, [initialIsLiked]);
+
+  useEffect(() => {
+    setLikeCount(initialLikes);
+  }, [initialLikes]);
+
+  useEffect(() => {
+    setIsFollowed(initialIsFollowed);
+  }, [initialIsFollowed]);
+
   const handleCommentClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     router.push(`/post/${postId}?focus=comment`);
@@ -86,7 +98,7 @@ export default function PostAction({
     try {
       await api.post(`/posts/${postId}/like`);
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch {
       setLiked(previousLiked);
       setLikeCount(previousLikeCount);
       toast.error('Gagal menyukai unggahan. Silakan coba lagi nanti.');
@@ -106,7 +118,7 @@ export default function PostAction({
           : `Mulai mengikuti @${authorUsername}`
       );
       if (onUpdate) onUpdate();
-    } catch (error) {
+    } catch {
       setIsFollowed(prevFollowed);
       toast.error('Gagal mengikuti akun. Silakan coba lagi nanti.');
     }
@@ -119,7 +131,7 @@ export default function PostAction({
     try {
       await navigator.clipboard.writeText(url);
       toast.success('Tautan berhasil disalin');
-    } catch (error) {
+    } catch {
       toast.error('Gagal menyalin tautan. Silakan coba lagi nanti.');
     }
   };
@@ -140,7 +152,7 @@ export default function PostAction({
         // todo: benerin kalo misal dihapusnya pas lagi di halaman /post/[id]
         window.location.reload();
       }
-    } catch (error) {
+    } catch {
       toast.error('Gagal menghapus unggahan. Silakan coba lagi nanti.');
     } finally {
       setIsDeleteDialogOpen(false);

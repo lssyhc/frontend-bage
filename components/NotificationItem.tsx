@@ -24,9 +24,12 @@ export default function NotificationItem({
     onUpdate,
 }: NotificationItemProps) {
     const router = useRouter();
-    const [isFollowing, setIsFollowing] = useState(false);
+    const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(
+        null
+    );
 
     const { type, data, created_at } = notification;
+    const isFollowing = optimisticFollowing ?? Boolean(data.is_followed);
 
     const stopPropagation = (event: React.MouseEvent<HTMLAnchorElement>) => {
         event.stopPropagation();
@@ -49,13 +52,15 @@ export default function NotificationItem({
         event.stopPropagation();
         if (!data.follower_id) return;
 
-        setIsFollowing((prev) => !prev);
+        const previousFollowing = isFollowing;
+        setOptimisticFollowing(!previousFollowing);
 
         try {
-            await api.post(`/users/${data.follower_id}/follow`);
+            const response = await api.post(`/users/${data.follower_id}/follow`);
+            setOptimisticFollowing(Boolean(response.data.data.is_following));
             if (onUpdate) onUpdate();
-        } catch (error) {
-            setIsFollowing((prev) => !prev);
+        } catch {
+            setOptimisticFollowing(previousFollowing);
             toast.error('Gagal mengikuti akun. Silakan coba lagi nanti.');
         }
     };
