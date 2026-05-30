@@ -244,7 +244,26 @@ export default function SearchPage() {
     );
 
     try {
-      await api.post(`/users/${targetUser.id}/follow`);
+      const response = await api.post(`/users/${targetUser.id}/follow`);
+      const isFollowing = Boolean(response.data.data.is_following);
+
+      setResults((prev) => {
+        const updatedResults = prev.map((item) =>
+          isSearchUser(item) && item.id === targetUser.id
+            ? { ...item, is_followed: isFollowing }
+            : item
+        );
+        const cacheKey = getCacheKey(debouncedQuery, f);
+
+        if (searchCache[cacheKey]) {
+          searchCache[cacheKey] = {
+            ...searchCache[cacheKey],
+            results: updatedResults,
+          };
+        }
+
+        return updatedResults;
+      });
     } catch (error) {
       setResults(previousResults);
       toast.error('Gagal memproses permintaan follow.');

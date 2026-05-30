@@ -65,6 +65,8 @@ export default function PostAction({
   const [liked, setLiked] = useState(initialIsLiked);
   const [likeCount, setLikeCount] = useState(initialLikes);
   const [isFollowed, setIsFollowed] = useState(initialIsFollowed);
+  const [likePending, setLikePending] = useState(false);
+  const [followPending, setFollowPending] = useState(false);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const router = useRouter();
@@ -89,38 +91,59 @@ export default function PostAction({
   const handleLikeClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
 
+    if (likePending) return;
+
     const previousLiked = liked;
     const previousLikeCount = likeCount;
 
+    setLikePending(true);
     setLiked((prevLiked) => !prevLiked);
-    setLikeCount((prevCount) => prevCount + (liked ? -1 : 1));
+    setLikeCount((prevCount) => prevCount + (previousLiked ? -1 : 1));
 
     try {
-      await api.post(`/posts/${postId}/like`);
+      const response = await api.post(`/posts/${postId}/like`);
+      const responseData = response.data.data;
+
+      setLiked(Boolean(responseData?.liked ?? !previousLiked));
+      setLikeCount(Number(responseData?.total_likes ?? previousLikeCount));
       if (onUpdate) onUpdate();
     } catch {
       setLiked(previousLiked);
       setLikeCount(previousLikeCount);
       toast.error('Gagal menyukai unggahan. Silakan coba lagi nanti.');
+    } finally {
+      setLikePending(false);
     }
   };
 
   const handleFollow = async (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
+
+    if (followPending) return;
+
     setIsDrawerOpen(false);
     const prevFollowed = isFollowed;
+
+    setFollowPending(true);
     setIsFollowed(!prevFollowed);
     try {
-      await api.post(`/users/${authorId}/follow`);
+      const response = await api.post(`/users/${authorId}/follow`);
+      const nextIsFollowing = Boolean(
+        response.data.data?.is_following ?? !prevFollowed
+      );
+
+      setIsFollowed(nextIsFollowing);
       toast.success(
-        prevFollowed
-          ? `Berhenti mengikuti @${authorUsername}`
-          : `Mulai mengikuti @${authorUsername}`
+        nextIsFollowing
+          ? `Mulai mengikuti @${authorUsername}`
+          : `Berhenti mengikuti @${authorUsername}`
       );
       if (onUpdate) onUpdate();
     } catch {
       setIsFollowed(prevFollowed);
       toast.error('Gagal mengikuti akun. Silakan coba lagi nanti.');
+    } finally {
+      setFollowPending(false);
     }
   };
 
@@ -178,6 +201,7 @@ export default function PostAction({
           <button
             aria-label="Sukai unggahan"
             onClick={handleLikeClick}
+            disabled={likePending}
             className={`peer text-muted-foreground cursor-pointer rounded-sm p-1 transition hover:bg-red-500/10 hover:text-red-500 focus-visible:bg-red-500/10 focus-visible:text-red-500 focus-visible:ring-2 focus-visible:ring-red-300 focus-visible:outline-none ${
               liked ? 'text-red-500 *:[svg]:fill-red-500' : ''
             }`}
@@ -236,6 +260,7 @@ export default function PostAction({
                     <button
                       className="flex items-center gap-4 text-left font-bold"
                       onClick={handleFollow}
+                      disabled={followPending}
                     >
                       <UserPlus size={16} />
                       {isFollowed ? 'Berhenti mengikuti' : 'Ikuti user'}
@@ -281,6 +306,7 @@ export default function PostAction({
                   <DropdownMenuItem
                     className="flex items-center gap-2 px-3 py-2 font-bold"
                     onClick={handleFollow}
+                    disabled={followPending}
                   >
                     <UserPlus size={16} />
                     {isFollowed ? 'Berhenti mengikuti' : 'Ikuti user'}

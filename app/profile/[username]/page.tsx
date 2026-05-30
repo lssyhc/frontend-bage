@@ -47,6 +47,7 @@ export default function ProfilePage({
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [followPending, setFollowPending] = useState(false);
   const scrollRestored = useRef(false);
 
   const isMine = currentUser?.username === getCleanUsername(username);
@@ -115,27 +116,41 @@ export default function ProfilePage({
   };
 
   const handleFollow = async () => {
-    if (!user) return;
+    if (!user || followPending) return;
+
+    const previousUser = user;
+
+    setFollowPending(true);
     try {
-      await api.post(`/users/${user.id}/follow`);
+      const response = await api.post(`/users/${user.id}/follow`);
+      const responseData = response.data.data;
+      const isFollowing = Boolean(
+        responseData?.is_following ?? !previousUser.is_followed
+      );
+      const totalFollowers = Number(
+        responseData?.total_followers ?? previousUser.stats.followers_count
+      );
+
       setUser((prev) =>
         prev
           ? {
             ...prev,
-            is_followed: !prev.is_followed,
+            is_followed: isFollowing,
             stats: {
               ...prev.stats,
-              followers_count:
-                prev.stats.followers_count + (prev.is_followed ? -1 : 1),
+              followers_count: totalFollowers,
             },
           }
           : null
       );
       toast.success(
-        user.is_followed ? 'Berhenti mengikuti' : 'Mulai mengikuti'
+        isFollowing ? 'Mulai mengikuti' : 'Berhenti mengikuti'
       );
     } catch (error) {
+      setUser(previousUser);
       toast.error('Gagal memproses follow.');
+    } finally {
+      setFollowPending(false);
     }
   };
 
@@ -233,6 +248,7 @@ export default function ProfilePage({
                     variant={user.is_followed ? 'outline' : 'default'}
                     className="w-fit min-w-0 shrink rounded-full"
                     onClick={handleFollow}
+                    disabled={followPending}
                   >
                     {user.is_followed ? 'Mengikuti' : 'Ikuti'}
                   </Button>

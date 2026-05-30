@@ -27,6 +27,7 @@ export default function NotificationItem({
     const [optimisticFollowing, setOptimisticFollowing] = useState<boolean | null>(
         null
     );
+    const [followPending, setFollowPending] = useState(false);
 
     const { type, data, created_at } = notification;
     const isFollowing = optimisticFollowing ?? Boolean(data.is_followed);
@@ -50,9 +51,10 @@ export default function NotificationItem({
         event: React.MouseEvent<HTMLButtonElement>
     ) => {
         event.stopPropagation();
-        if (!data.follower_id) return;
+        if (!data.follower_id || followPending) return;
 
         const previousFollowing = isFollowing;
+        setFollowPending(true);
         setOptimisticFollowing(!previousFollowing);
 
         try {
@@ -62,6 +64,8 @@ export default function NotificationItem({
         } catch {
             setOptimisticFollowing(previousFollowing);
             toast.error('Gagal mengikuti akun. Silakan coba lagi nanti.');
+        } finally {
+            setFollowPending(false);
         }
     };
 
@@ -154,6 +158,7 @@ export default function NotificationItem({
                         onClick={handleFollowClick}
                         variant={isFollowing ? 'outline' : 'default'}
                         className="w-fit flex-shrink-0 cursor-pointer rounded-full text-sm font-semibold"
+                        disabled={followPending}
                     >
                         {isFollowing ? 'Mengikuti' : 'Ikuti balik'}
                     </Button>

@@ -120,7 +120,14 @@ export default function FollowersPage({
         );
 
         try {
-            await api.post(`/users/${targetUser.id}/follow`);
+            const response = await api.post(`/users/${targetUser.id}/follow`);
+            const isFollowing = Boolean(response.data.data.is_following);
+
+            setUsers((prev) =>
+                prev.map((u) =>
+                    u.id === targetUser.id ? { ...u, is_followed: isFollowing } : u
+                )
+            );
         } catch (error) {
             setUsers(previousUsers);
             toast.error('Gagal memproses permintaan follow.');
