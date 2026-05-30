@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -40,6 +40,8 @@ const isSearchUser = (item: SearchResult): item is SearchUser =>
 const isLocationDetail = (item: SearchResult): item is LocationDetail =>
   'address' in item && 'category' in item && 'coordinates' in item;
 
+const getCacheKey = (q: string, filter: string) => `${q}_${filter}`;
+
 export default function SearchPage() {
   const searchParams = useSearchParams();
 
@@ -59,8 +61,6 @@ export default function SearchPage() {
   const loadedFromCache = useRef(false);
   const currentQueryRef = useRef(initialQuery);
   const currentFilterRef = useRef(f);
-
-  const getCacheKey = (q: string, filter: string) => `${q}_${filter}`;
 
   useEffect(() => {
     if (isIntersecting && hasMore && !loading) {
@@ -122,7 +122,7 @@ export default function SearchPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [debouncedQuery, f]);
 
-  const fetchData = async (
+  const fetchData = useCallback(async (
     currentPage: number,
     isLoadMore: boolean = false
   ) => {
@@ -210,20 +210,20 @@ export default function SearchPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [debouncedQuery, f]);
 
   useEffect(() => {
     setResults([]);
     setPage(1);
     setHasMore(true);
     fetchData(1, false);
-  }, [debouncedQuery, f]);
+  }, [debouncedQuery, f, fetchData]);
 
   useEffect(() => {
     if (page > 1) {
       fetchData(page, true);
     }
-  }, [page]);
+  }, [page, fetchData]);
 
   const handleFollow = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -264,7 +264,7 @@ export default function SearchPage() {
 
         return updatedResults;
       });
-    } catch (error) {
+    } catch {
       setResults(previousResults);
       toast.error('Gagal memproses permintaan follow.');
     }

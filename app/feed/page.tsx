@@ -1,18 +1,11 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
-// import type { Metadata } from 'next';
 import Image from 'next/image';
 import Link from 'next/link';
 
 import { toast } from 'sonner';
-
-// import { useSearchParams } from 'next/navigation';
-
-// export const metadata: Metadata = {
-//   title: 'Feed',
-// };
 
 import NavigationBar from '@/components/NavigationBar';
 import PostItem from '@/components/PostItem';
@@ -68,7 +61,7 @@ export default function FeedPage() {
         if (response.data) {
           setUser(response.data.data);
         }
-      } catch (error) {
+      } catch {
         toast.error('Gagal memuat profil pengguna. Silahkan coba lagi nanti.');
       }
     };
@@ -77,9 +70,9 @@ export default function FeedPage() {
 
   useEffect(() => {
     const savedTab = sessionStorage.getItem('feed_tab');
-    if (savedTab && savedTab !== selectedOption) {
-      setSelectedOption(savedTab);
-    }
+    setSelectedOption((currentOption) =>
+      savedTab && savedTab !== currentOption ? savedTab : currentOption
+    );
   }, []);
 
   useEffect(() => {
@@ -114,7 +107,7 @@ export default function FeedPage() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [selectedOption]);
 
-  const fetchPosts = async (
+  const fetchPosts = useCallback(async (
     currentPage: number,
     isLoadMore: boolean = false
   ) => {
@@ -165,25 +158,25 @@ export default function FeedPage() {
       });
 
       setHasMore(meta.current_page < meta.last_page);
-    } catch (error) {
+    } catch {
       toast.error('Gagal memuat unggahan. Silakan coba lagi nanti.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedOption]);
 
   useEffect(() => {
     setPosts([]);
     setPage(1);
     setHasMore(true);
     fetchPosts(1, false);
-  }, [selectedOption]);
+  }, [selectedOption, fetchPosts]);
 
   useEffect(() => {
     if (page > 1) {
       fetchPosts(page, true);
     }
-  }, [page]);
+  }, [page, fetchPosts]);
 
   return (
     <>

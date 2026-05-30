@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -33,7 +33,7 @@ export default function PostLikesPage({
         threshold: 0.5,
     });
 
-    const fetchData = async (currentPage: number, isLoadMore: boolean = false) => {
+    const fetchData = useCallback(async (currentPage: number, isLoadMore: boolean = false) => {
         if (!isLoadMore) {
             setLoading(true);
         }
@@ -59,16 +59,16 @@ export default function PostLikesPage({
             });
 
             setHasMore(meta ? meta.current_page < meta.last_page : false);
-        } catch (error) {
+        } catch {
             toast.error('Gagal memuat daftar like.');
         } finally {
             setLoading(false);
         }
-    };
+    }, [id]);
 
     useEffect(() => {
         fetchData(1);
-    }, [id]);
+    }, [fetchData]);
 
     useEffect(() => {
         if (isIntersecting && hasMore && !loading) {
@@ -80,7 +80,7 @@ export default function PostLikesPage({
         if (page > 1) {
             fetchData(page, true);
         }
-    }, [page]);
+    }, [page, fetchData]);
 
     const handleFollowClick = async (
         e: React.MouseEvent<HTMLButtonElement>,
@@ -107,7 +107,7 @@ export default function PostLikesPage({
                     u.id === targetUser.id ? { ...u, is_followed: isFollowing } : u
                 )
             );
-        } catch (error) {
+        } catch {
             setUsers(previousUsers);
             toast.error('Gagal memproses permintaan follow.');
         }

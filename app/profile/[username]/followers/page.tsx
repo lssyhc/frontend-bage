@@ -1,6 +1,6 @@
 'use client';
 
-import { use, useEffect, useState } from 'react';
+import { use, useCallback, useEffect, useState } from 'react';
 
 import { useRouter } from 'next/navigation';
 
@@ -42,7 +42,7 @@ export default function FollowersPage({
             try {
                 const userRes = await api.get(`/users/${cleanUsername}`);
                 setUserId(userRes.data.data.id);
-            } catch (error) {
+            } catch {
                 toast.error('Gagal memuat profil pengguna.');
                 setLoading(false);
             }
@@ -50,13 +50,7 @@ export default function FollowersPage({
         fetchUser();
     }, [cleanUsername]);
 
-    useEffect(() => {
-        if (userId) {
-            fetchData(1);
-        }
-    }, [userId]);
-
-    const fetchData = async (currentPage: number, isLoadMore: boolean = false) => {
+    const fetchData = useCallback(async (currentPage: number, isLoadMore: boolean = false) => {
         if (!userId) return;
 
         if (!isLoadMore) {
@@ -84,12 +78,18 @@ export default function FollowersPage({
             });
 
             setHasMore(meta ? meta.current_page < meta.last_page : false);
-        } catch (error) {
+        } catch {
             toast.error('Gagal memuat daftar pengikut.');
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId]);
+
+    useEffect(() => {
+        if (userId) {
+            fetchData(1);
+        }
+    }, [userId, fetchData]);
 
     useEffect(() => {
         if (isIntersecting && hasMore && !loading) {
@@ -101,7 +101,7 @@ export default function FollowersPage({
         if (page > 1) {
             fetchData(page, true);
         }
-    }, [page]);
+    }, [page, fetchData]);
 
     const handleFollowClick = async (
         e: React.MouseEvent<HTMLButtonElement>,
@@ -128,7 +128,7 @@ export default function FollowersPage({
                     u.id === targetUser.id ? { ...u, is_followed: isFollowing } : u
                 )
             );
-        } catch (error) {
+        } catch {
             setUsers(previousUsers);
             toast.error('Gagal memproses permintaan follow.');
         }
