@@ -2,7 +2,7 @@
 
 import { ChangeEvent, useCallback, useEffect, useRef, useState } from 'react';
 import Cropper, { Area } from 'react-easy-crop';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 
 import NextImage from 'next/image';
 import { useRouter } from 'next/navigation';
@@ -105,7 +105,7 @@ export default function ProfileSettingsPage() {
   const {
     register,
     handleSubmit,
-    watch,
+    control,
     reset,
     formState: { errors, isSubmitting, isValid, isDirty },
   } = useForm<ProfileFormValues>({
@@ -118,9 +118,9 @@ export default function ProfileSettingsPage() {
     mode: 'onChange',
   });
 
-  const fullNameValue = watch('fullName') || '';
-  const usernameValue = watch('username') || '';
-  const bioValue = watch('bio') || '';
+  const fullNameValue = useWatch({ control, name: 'fullName' }) || '';
+  const usernameValue = useWatch({ control, name: 'username' }) || '';
+  const bioValue = useWatch({ control, name: 'bio' }) || '';
 
   const MAX_FULLNAME = 100;
   const MAX_USERNAME = 50;
@@ -280,6 +280,7 @@ export default function ProfileSettingsPage() {
             <Avatar className="mx-auto my-2 size-20">
               {croppedImage ? (
                 <AvatarImage asChild src={croppedImage} alt="Foto profil">
+                  {/* eslint-disable-next-line @next/next/no-img-element -- croppedImage is a local blob URL preview. */}
                   <img src={croppedImage} alt="Foto profil" className="aspect-square size-full object-cover" />
                 </AvatarImage>
               ) : (

@@ -855,8 +855,6 @@ function FileUploadDropzone(props: FileUploadDropzoneProps) {
       role="region"
       id={context.dropzoneId}
       aria-controls={`${context.inputId} ${context.listId}`}
-      aria-disabled={context.disabled}
-      aria-invalid={invalid}
       data-disabled={context.disabled ? "" : undefined}
       data-dragging={dragOver ? "" : undefined}
       data-invalid={invalid ? "" : undefined}
@@ -945,7 +943,6 @@ function FileUploadList(props: FileUploadListProps) {
     <ListPrimitive
       role="list"
       id={context.listId}
-      aria-orientation={orientation}
       data-orientation={orientation}
       data-slot="file-upload-list"
       data-state={shouldRender ? "active" : "inactive"}
@@ -1076,6 +1073,7 @@ function FileUploadItemPreview(props: FileUploadItemPreviewProps) {
 
         return (
           // biome-ignore lint/performance/noImgElement: dynamic file URLs from user uploads don't work well with Next.js Image optimization
+          // eslint-disable-next-line @next/next/no-img-element -- dynamic local preview URLs are not compatible with next/image.
           <img src={url} alt={file.name} className="size-full object-cover" />
         );
       }
