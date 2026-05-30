@@ -37,7 +37,7 @@ export default function PlaceProfilePage() {
 
         setLocation(locationRes.data.data);
         setPosts(postsRes.data.data);
-      } catch (error) {
+      } catch {
         toast.error('Gagal memuat tempat. Silakan coba lagi nanti.');
       } finally {
         setLoading(false);

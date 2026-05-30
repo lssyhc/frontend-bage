@@ -19,7 +19,7 @@ export default function NavigationBar() {
       try {
         const response = await api.get('/user');
         setUsername(response.data.data.username);
-      } catch (error) {
+      } catch {
         toast.error('Gagal memuat data pengguna. Silakan coba lagi nanti.');
       }
     };

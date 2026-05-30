@@ -1,11 +1,10 @@
 'use client';
 
 import { usePathname } from 'next/navigation';
-import { Toaster, useSonner, type ToastT } from 'sonner';
+import { Toaster } from 'sonner';
 
 export default function AppToaster() {
     const pathname = usePathname();
-    const { toasts } = useSonner();
 
     let hasOffset = true;
 

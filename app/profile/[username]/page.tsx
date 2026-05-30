@@ -7,7 +7,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
-import { ArrowLeft, Copy, Ellipsis, Settings, UserPlus } from 'lucide-react';
+import { ArrowLeft, Copy, Ellipsis, Settings } from 'lucide-react';
 import { toast } from 'sonner';
 
 import NavigationBar from '@/components/NavigationBar';
@@ -70,7 +70,7 @@ export default function ProfilePage({
 
       const postsRes = await api.get(`/users/${userRes.data.data.id}/posts`);
       setPosts(postsRes.data.data);
-    } catch (error) {
+    } catch {
       toast.error('Gagal memuat profil. Silakan coba lagi nanti.');
     } finally {
       setLoading(false);
@@ -110,7 +110,7 @@ export default function ProfilePage({
     try {
       await navigator.clipboard.writeText(url);
       toast.success('Tautan profil berhasil disalin');
-    } catch (error) {
+    } catch {
       toast.error('Gagal menyalin tautan.');
     }
   };
@@ -146,7 +146,7 @@ export default function ProfilePage({
       toast.success(
         isFollowing ? 'Mulai mengikuti' : 'Berhenti mengikuti'
       );
-    } catch (error) {
+    } catch {
       setUser(previousUser);
       toast.error('Gagal memproses follow.');
     } finally {

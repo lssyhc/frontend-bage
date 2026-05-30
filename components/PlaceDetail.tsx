@@ -1,9 +1,6 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
-
 import {
-    ArrowLeft,
     Coffee,
     Ellipsis,
     Hotel,
@@ -40,11 +37,8 @@ export default function PlaceDetail({
     location,
     postCount = 0,
     averageRating = 0,
-    totalRatings = 0,
 }: PlaceDetailProps) {
-    const router = useRouter();
-
-    const { name, address, category, description, coordinates, is_mine, icon } =
+    const { name, address, category, description, is_mine, icon } =
         location;
 
     const IconComponent =

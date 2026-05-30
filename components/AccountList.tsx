@@ -2,8 +2,6 @@
 
 import { useState } from 'react';
 
-import { useRouter } from 'next/navigation';
-
 import { toast } from 'sonner';
 
 import api from '@/lib/axios';
@@ -17,7 +15,6 @@ interface UserListProps {
 
 export default function UserList({ users: initialUsers }: UserListProps) {
   const [users, setUsers] = useState<User[]>(initialUsers);
-  const router = useRouter();
 
   const handleFollowClick = async (
     e: React.MouseEvent<HTMLButtonElement>,
@@ -44,7 +41,7 @@ export default function UserList({ users: initialUsers }: UserListProps) {
           u.id === targetUser.id ? { ...u, is_followed: isFollowing } : u
         )
       );
-    } catch (error) {
+    } catch {
       setUsers(previousUsers);
       toast.error('Gagal memproses permintaan follow.');
     }

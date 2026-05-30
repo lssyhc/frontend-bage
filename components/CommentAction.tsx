@@ -48,7 +48,7 @@ export default function CommentAction({
       } else {
         window.location.reload();
       }
-    } catch (error) {
+    } catch {
       toast.error('Gagal menghapus komentar. Silakan coba lagi nanti.');
     }
   };

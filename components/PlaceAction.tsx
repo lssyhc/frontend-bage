@@ -43,7 +43,6 @@ interface PlaceActionProps {
 
 export default function PlaceAction({
   locationId,
-  locationName,
   isMine,
 }: PlaceActionProps) {
   const router = useRouter();
@@ -56,7 +55,7 @@ export default function PlaceAction({
     try {
       await navigator.clipboard.writeText(url);
       toast.success('Tautan berhasil disalin');
-    } catch (error) {
+    } catch {
       toast.error('Gagal menyalin tautan. Silakan coba lagi nanti.');
     }
   };

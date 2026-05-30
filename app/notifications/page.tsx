@@ -51,7 +51,7 @@ export default function NotificationsPage() {
       });
 
       setHasMore(meta ? meta.current_page < meta.last_page : false);
-    } catch (error) {
+    } catch {
       toast.error('Gagal memuat notifikasi. Silakan coba lagi nanti.');
     } finally {
       setLoading(false);

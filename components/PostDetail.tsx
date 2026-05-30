@@ -4,7 +4,6 @@ import { useEffect, useState } from 'react';
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 
 import { Star, X } from 'lucide-react';
 
@@ -28,8 +27,6 @@ interface PostDetailProps {
 }
 
 export default function PostDetail({ post, onUpdate }: PostDetailProps) {
-  const router = useRouter();
-
   const stopPropagation = (e: React.MouseEvent<HTMLElement>) => {
     e.stopPropagation();
   };
