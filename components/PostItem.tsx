@@ -172,7 +172,7 @@ export default function PostItem({ post, onUpdate }: PostItemProps) {
         </div>
       </div>
       <div className="flex gap-2">
-        {Array.from({ length: post.rating }).map((_, i) => (
+        {Array.from({ length: post.rating ?? 0 }).map((_, i) => (
           <Star key={i} size={16} className="fill-yellow-300 text-yellow-300" />
         ))}
       </div>

@@ -190,9 +190,12 @@ export default function CreatePostPage() {
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, userLocation]);
 
-  const onFileReject = useCallback((file: File) => {
+  const onFileReject = useCallback((file: File, message: string) => {
+    const fileName =
+      file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name;
+
     toast.error('Gagal membuat unggahan', {
-      description: `"${file.name.length > 20 ? `${file.name.slice(0, 20)}...` : file.name}" telah ditolak karena melebihi batas jumlah file`,
+      description: `"${fileName}" ${message}`,
     });
   }, []);
 

@@ -174,7 +174,7 @@ export default function ProfileSettingsPage() {
         reset({
           fullName: user.name,
           username: user.username,
-          bio: user.bio,
+          bio: user.bio ?? '',
         });
 
         if (user.profile_picture_url) {
@@ -217,7 +217,7 @@ export default function ProfileSettingsPage() {
       const formData = new FormData();
       formData.append('name', data.fullName);
       if (data.username) formData.append('username', data.username);
-      if (data.bio) formData.append('bio', data.bio);
+      formData.append('bio', data.bio ?? '');
 
       if (croppedImage) {
         const response = await fetch(croppedImage);

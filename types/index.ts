@@ -48,8 +48,8 @@ export interface Media {
 
 export interface Post {
     id: number;
-    content: string;
-    rating: number;
+    content: string | null;
+    rating: number | null;
     total_likes: number;
     total_comments: number;
     is_liked: boolean;
