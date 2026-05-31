@@ -21,6 +21,10 @@ type BrowserRequest = {
   method?: string;
 };
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 async function deleteAccount(account: TestAccount) {
   const api = await request.newContext({
     baseURL: apiURL,
@@ -31,24 +35,39 @@ async function deleteAccount(account: TestAccount) {
   });
 
   try {
-    const login = await api.post('/auth/login', {
+    let login = await api.post('/auth/login', {
       data: {
         credential: account.username,
         password: account.password,
       },
     });
 
-    if (login.ok()) {
-      const cookie = login.headers()['set-cookie']?.split(';')[0];
-
-      if (cookie) {
-        await api.delete('/auth/account', {
-          headers: {
-            Cookie: cookie,
-          },
-        });
-      }
+    if (login.status() === 429) {
+      await delay(65_000);
+      login = await api.post('/auth/login', {
+        data: {
+          credential: account.username,
+          password: account.password,
+        },
+      });
     }
+
+    if (login.status() === 401) {
+      return;
+    }
+
+    expect(login.ok(), `cleanup login failed for ${account.username}`).toBe(true);
+
+    const cookie = login.headers()['set-cookie']?.split(';')[0];
+    expect(cookie, `cleanup cookie missing for ${account.username}`).toBeTruthy();
+
+    const destroy = await api.delete('/auth/account', {
+      headers: {
+        Cookie: cookie,
+      },
+    });
+
+    expect(destroy.ok(), `cleanup delete failed for ${account.username}`).toBe(true);
   } finally {
     await api.dispose();
   }
