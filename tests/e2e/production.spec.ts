@@ -39,7 +39,15 @@ async function deleteAccount(account: TestAccount) {
     });
 
     if (login.ok()) {
-      await api.delete('/auth/account');
+      const cookie = login.headers()['set-cookie']?.split(';')[0];
+
+      if (cookie) {
+        await api.delete('/auth/account', {
+          headers: {
+            Cookie: cookie,
+          },
+        });
+      }
     }
   } finally {
     await api.dispose();
