@@ -26,6 +26,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import api from '@/lib/axios';
+import { clearAuthRouteCookie } from '@/lib/auth-route-cookie';
 
 export default function SettingsPage() {
   const router = useRouter();
@@ -33,6 +34,7 @@ export default function SettingsPage() {
   const handleDeleteAccount = async () => {
     try {
       await api.delete('/auth/account');
+      clearAuthRouteCookie();
       toast.success('Akun berhasil dihapus');
       router.push('/login');
     } catch {
@@ -43,6 +45,7 @@ export default function SettingsPage() {
   const handleLogout = async () => {
     try {
       await api.post('/auth/logout');
+      clearAuthRouteCookie();
       toast.success('Berhasil keluar');
       router.push('/login');
     } catch {

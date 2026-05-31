@@ -15,6 +15,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Spinner } from '@/components/ui/spinner';
 import api from '@/lib/axios';
+import { setAuthRouteCookie } from '@/lib/auth-route-cookie';
 
 const formSchema = z.object({
   username: z
@@ -56,6 +57,7 @@ export default function LoginForm() {
         password: data.password,
       });
 
+      setAuthRouteCookie();
       toast.success('Berhasil masuk! Selamat datang :)');
       router.push('/feed');
     } catch (error) {

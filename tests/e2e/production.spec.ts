@@ -76,13 +76,13 @@ test('live production supports auth, content, media, social, and notification fl
   const suffix = Date.now().toString(36);
   const password = `E2e!${suffix}Aa1`;
   const first: TestAccount = {
-    email: `e2e.${suffix}.first@example.com`,
+    email: `e2e.${suffix}.first@gmail.com`,
     name: `E2E First ${suffix}`,
     password,
     username: `e2e_first_${suffix}`,
   };
   const second: TestAccount = {
-    email: `e2e.${suffix}.second@example.com`,
+    email: `e2e.${suffix}.second@gmail.com`,
     name: `E2E Second ${suffix}`,
     password,
     username: `e2e_second_${suffix}`,

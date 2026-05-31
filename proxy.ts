@@ -2,8 +2,10 @@
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 
+import { AUTH_ROUTE_COOKIE } from './lib/auth-route-cookie'
+
 export function proxy(request: NextRequest) {
-    const token = request.cookies.get('token')?.value
+    const token = request.cookies.get('token')?.value || request.cookies.get(AUTH_ROUTE_COOKIE)?.value
     const { pathname } = request.nextUrl
 
     if (token && (pathname === '/login' || pathname === '/signup')) {
