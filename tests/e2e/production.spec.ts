@@ -35,28 +35,35 @@ async function deleteAccount(account: TestAccount) {
   });
 
   try {
-    let login = await api.post('/auth/login', {
-      data: {
-        credential: account.username,
-        password: account.password,
-      },
-    });
+    let login;
 
-    if (login.status() === 429) {
-      await delay(65_000);
+    for (let attempt = 0; attempt < 3; attempt += 1) {
       login = await api.post('/auth/login', {
         data: {
           credential: account.username,
           password: account.password,
         },
       });
+
+      if (login.status() !== 429) {
+        break;
+      }
+
+      await delay(65_000);
+    }
+
+    if (!login) {
+      throw new Error(`cleanup login response missing for ${account.username}`);
     }
 
     if (login.status() === 401) {
       return;
     }
 
-    expect(login.ok(), `cleanup login failed for ${account.username}`).toBe(true);
+    expect(
+      login.ok(),
+      `cleanup login failed for ${account.username}: ${login.status()}`
+    ).toBe(true);
 
     const cookie = login.headers()['set-cookie']?.split(';')[0];
     expect(cookie, `cleanup cookie missing for ${account.username}`).toBeTruthy();
@@ -67,7 +74,10 @@ async function deleteAccount(account: TestAccount) {
       },
     });
 
-    expect(destroy.ok(), `cleanup delete failed for ${account.username}`).toBe(true);
+    expect(
+      destroy.ok(),
+      `cleanup delete failed for ${account.username}: ${destroy.status()}`
+    ).toBe(true);
   } finally {
     await api.dispose();
   }
