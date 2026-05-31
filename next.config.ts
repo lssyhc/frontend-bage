@@ -7,8 +7,10 @@ if (!apiBaseUrl && process.env.NODE_ENV === 'production') {
 }
 
 const localApiBaseUrl = apiBaseUrl ?? 'http://localhost:8000/api';
-const mediaBaseUrl =
-  process.env.NEXT_PUBLIC_MEDIA_URL ?? new URL('/storage', localApiBaseUrl).toString();
+const mediaBaseUrls = [
+  process.env.NEXT_PUBLIC_MEDIA_URL,
+  new URL('/media', localApiBaseUrl).toString(),
+].filter((value): value is string => Boolean(value));
 
 const remoteImagePattern = (value: string) => {
   const url = new URL(value);
@@ -35,7 +37,7 @@ const remoteImagePattern = (value: string) => {
 
 const nextConfig: NextConfig = {
   images: {
-    remotePatterns: [remoteImagePattern(mediaBaseUrl)],
+    remotePatterns: Array.from(new Set(mediaBaseUrls)).map(remoteImagePattern),
   },
 };
 
