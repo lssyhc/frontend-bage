@@ -27,7 +27,6 @@ function delay(ms: number) {
 
 async function deleteAccount(account: TestAccount) {
   const api = await request.newContext({
-    baseURL: apiURL,
     extraHTTPHeaders: {
       Accept: 'application/json',
       'Content-Type': 'application/json',
@@ -38,7 +37,7 @@ async function deleteAccount(account: TestAccount) {
     let login;
 
     for (let attempt = 0; attempt < 3; attempt += 1) {
-      login = await api.post('auth/login', {
+      login = await api.post(`${apiURL}/auth/login`, {
         data: {
           credential: account.username,
           password: account.password,
@@ -68,7 +67,7 @@ async function deleteAccount(account: TestAccount) {
     const cookie = login.headers()['set-cookie']?.split(';')[0];
     expect(cookie, `cleanup cookie missing for ${account.username}`).toBeTruthy();
 
-    const destroy = await api.delete('auth/account', {
+    const destroy = await api.delete(`${apiURL}/auth/account`, {
       headers: {
         Cookie: cookie,
       },
