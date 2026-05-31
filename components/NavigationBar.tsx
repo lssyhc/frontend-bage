@@ -67,17 +67,28 @@ export default function NavigationBar() {
           <Bell size={20} />
         </Link>
 
-        <Link
-          href={username ? `/profile/${username}` : '/profile'}
-          aria-label="Kunjungi halaman profil"
-          className={`hover:bg-accent focus:bg-accent xs:px-3 xs:py-2 focus:inset-ring-ring/50 w-fit cursor-pointer rounded-lg px-4 py-3 transition-colors focus:outline-none focus-visible:inset-ring-2 ${
-            isActive('/profile')
-              ? 'bg-accent text-foreground font-bold'
-              : 'text-muted-foreground'
-          }`}
-        >
-          <User size={20} />
-        </Link>
+        {username ? (
+          <Link
+            href={`/profile/${username}`}
+            aria-label="Kunjungi halaman profil"
+            className={`hover:bg-accent focus:bg-accent xs:px-3 xs:py-2 focus:inset-ring-ring/50 w-fit cursor-pointer rounded-lg px-4 py-3 transition-colors focus:outline-none focus-visible:inset-ring-2 ${
+              isActive('/profile')
+                ? 'bg-accent text-foreground font-bold'
+                : 'text-muted-foreground'
+            }`}
+          >
+            <User size={20} />
+          </Link>
+        ) : (
+          <button
+            type="button"
+            aria-label="Kunjungi halaman profil"
+            disabled
+            className="xs:px-3 xs:py-2 text-muted-foreground w-fit cursor-not-allowed rounded-lg px-4 py-3 opacity-60"
+          >
+            <User size={20} />
+          </button>
+        )}
 
         <Link
           href="/create/post"

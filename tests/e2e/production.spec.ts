@@ -217,6 +217,7 @@ test('live production supports auth, content, media, social, and notification fl
     expect(follow.status).toBe(200);
     expect(follow.body.data.is_following).toBe(true);
 
+    await page.context().clearCookies();
     await page.goto(`${frontendURL}/login`);
     await page.getByLabel('Email atau username').fill(first.username);
     await page.getByLabel('Password', { exact: true }).fill(first.password);
@@ -224,7 +225,9 @@ test('live production supports auth, content, media, social, and notification fl
     await expect(page).toHaveURL(/\/feed/);
 
     await page.goto(`${frontendURL}/notifications`);
-    await expect(page.getByText(second.username).first()).toBeVisible();
+    await expect(
+      page.locator(`a[href="/profile/${second.username}"]`).first()
+    ).toBeVisible();
 
     expect(consoleIssues).toEqual([]);
   } finally {
